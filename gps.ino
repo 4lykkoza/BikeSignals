@@ -35,12 +35,17 @@
 #include <TinyGPS.h>
 #include <SPI.h>
 TinyGPS gps;
+int32_t SPO2;
 SoftwareSerial ss(3,4 ); //3,4
+SoftwareSerial ss1(12,13 ); //3,4
 #include <CayenneLPP.h>
 CayenneLPP lpp(51);
-static const PROGMEM u1_t NWKSKEY[16] = {0xF4, 0x75, 0x8C, 0x4D, 0x7E, 0xB2, 0xC0, 0xC4, 0xB3, 0x1F, 0xD1, 0x2A, 0x09, 0xBB, 0x75, 0xBB};
-static const u1_t PROGMEM APPSKEY[16] = {0x7A, 0xA2, 0x73, 0x8E, 0x89, 0xCD, 0xB8, 0x8A, 0x8F, 0x80, 0x22, 0xF6, 0x70, 0xC2, 0xAE, 0x69};
-static const u4_t DEVADDR = 0x260B0E58 ; // <-- Change this address for every node!
+//static const PROGMEM u1_t NWKSKEY[16] = {0xF4, 0x75, 0x8C, 0x4D, 0x7E, 0xB2, 0xC0, 0xC4, 0xB3, 0x1F, 0xD1, 0x2A, 0x09, 0xBB, 0x75, 0xBB};
+//static const u1_t PROGMEM APPSKEY[16] = {0x7A, 0xA2, 0x73, 0x8E, 0x89, 0xCD, 0xB8, 0x8A, 0x8F, 0x80, 0x22, 0xF6, 0x70, 0xC2, 0xAE, 0x69};
+//static const u4_t DEVADDR = 0x260B0E58 ; // <-- Change this address for every node!
+static const PROGMEM u1_t NWKSKEY[16] = {0x0A, 0xC0, 0x16, 0xA4, 0xDD, 0x71, 0xE2, 0xF6, 0x85, 0x31, 0xAC, 0xEE, 0xF5, 0x63, 0x1E, 0x93};
+static const u1_t PROGMEM APPSKEY[16] = { 0x3D, 0x2E, 0x31, 0x25, 0x9F, 0x4F, 0xC6, 0xDF, 0xCC, 0xCB, 0xAF, 0x75, 0xF9, 0x36, 0x3E, 0xF2 };
+static const u4_t DEVADDR = 0x26013BCF ; // <-- Change this address for every node!
 void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
@@ -127,10 +132,10 @@ void do_send(osjob_t* j){
     // Check if there is not a current TX/RX job running
   float flat, flon,falt;
   unsigned long age;
-  
+  smartdelay(1000); 
+  smartdelay1(4000);
   gps.f_get_position(&flat, &flon, &age);
-  falt=gps.f_altitude();  //get altitude 
-  smartdelay(1000);      
+  falt=gps.f_altitude();  //get altitude   
   flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6;//save six decimal places 
   flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6;
   falt == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : falt, 2;//save two decimal places
@@ -151,6 +156,7 @@ void do_send(osjob_t* j){
 void setup() {
     Serial.begin(9600);
     ss.begin(9600);
+    ss1.begin(9600);
     Serial.println(F("Starting"));
     
     #ifdef VCC_ENABLE
@@ -224,6 +230,22 @@ void setup() {
     do_send(&sendjob);
 }
 
+static void smartdelay1(unsigned long ms)
+{
+    byte a,b,c,d;
+    a = ss1.read();
+    b = ss1.read();
+    c = ss1.read();
+    d = ss1.read();
+     
+    SPO2 = a;
+    SPO2 = (SPO2 << 8) | b;
+    SPO2 = (SPO2 << 8) | c;
+    SPO2 = (SPO2 << 8) | d;
+     
+    Serial.print(SPO2);
+    Serial.print("\n");
+}
 static void smartdelay(unsigned long ms)
 {
   unsigned long start = millis();
