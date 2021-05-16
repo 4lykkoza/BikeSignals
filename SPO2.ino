@@ -63,6 +63,7 @@ void loop()
   Serial.println(F("Wait about four seconds"));
   particleSensor.heartrateAndOxygenSaturation(/**SPO2=*/&SPO2, /**SPO2Valid=*/&SPO2Valid, /**heartRate=*/&heartRate, /**heartRateValid=*/&heartRateValid);
   // Print result 
+  float temperature = particleSensor.readTemperature();
   Serial.print(F("heartRate="));
   Serial.print(heartRate, DEC);
   Serial.print(F(", heartRateValid="));
@@ -71,9 +72,10 @@ void loop()
   Serial.print(SPO2,DEC);
   Serial.print(F(", SPO2Valid="));
   Serial.println(SPO2Valid, DEC);
-   Wire.beginTransmission(8); // transmit to device #8
+  Wire.beginTransmission(8); // transmit to device #8
   Wire.write("x is ");        // sends five bytes
   Wire.write(SPO2);              // sends one byte
+  Wire.write((int)temperature);
   Wire.endTransmission();    // stop transmitting
   delay(500);
 }
