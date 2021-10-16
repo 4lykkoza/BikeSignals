@@ -45,12 +45,14 @@ CayenneLPP lpp(51);
 static const PROGMEM u1_t NWKSKEY[16] = {0xF4, 0x75, 0x8C, 0x4D, 0x7E, 0xB2, 0xC0, 0xC4, 0xB3, 0x1F, 0xD1, 0x2A, 0x09, 0xBB, 0x75, 0xBB};
 static const u1_t PROGMEM APPSKEY[16] = {0x7A, 0xA2, 0x73, 0x8E, 0x89, 0xCD, 0xB8, 0x8A, 0x8F, 0x80, 0x22, 0xF6, 0x70, 0xC2, 0xAE, 0x69};
 static const u4_t DEVADDR = 0x260B0E58 ; // <-- Change this address for every node!
-
+//F4758C4D7EB2C0C4B31FD12A09BB75BB
+//7AA2738E89CDB88A8F8022F670C2AE69
 void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
-int x;
-int temperature;
+int32_t SPO2;
+int32_t heartRate;
+int32_t temperature;
 static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
@@ -141,9 +143,11 @@ void do_send(osjob_t* j){
   falt == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : falt, 2;//save two decimal places
   Serial.print(flon);
   lpp.reset();
-  lpp.addGPS(3, flat, flon, falt);
-  lpp.addAnalogOutput(3,x);
-  lpp.addAnalogOutput(3,temperature);
+  lpp.addGPS(1, flat, flon, falt);
+  lpp.addAnalogOutput(2,SPO2);
+  lpp.addAnalogOutput(3,heartRate);
+   
+  //lpp.addAnalogOutput(3,temperature);
   // send data
     if (LMIC.opmode & OP_TXRXPEND ) {
         Serial.println(F("OP_TXRXPEND, not sending"));
@@ -244,13 +248,12 @@ static void smartdelay(unsigned long ms)
   } while (millis() - start < ms);
 }
 void receiveEvent(int howMany) {
-  while (1 < Wire.available()) { // loop through all but the last
-    char c = Wire.read(); // receive byte as a character
-    Serial.print(c);         // print the character
-  }
-  x = Wire.read();    // receive byte as an integer
+  SPO2 = Wire.read();    // receive byte as an integer
+  Serial.println(SPO2);         // print the integer
+  heartRate = Wire.read();    // receive byte as an integer
+  Serial.println(heartRate);  
   temperature=Wire.read();
-  //Serial.println(x);         // print the integer
+  Serial.println(temperature);
 }
 void loop() {
     os_runloop_once();
