@@ -23,6 +23,7 @@ pulseWidth:    SAMPLERATE_50 SAMPLERATE_100 SAMPLERATE_200 SAMPLERATE_400
                SAMPLERATE_800 SAMPLERATE_1000 SAMPLERATE_1600 SAMPLERATE_3200
 adcRange:      ADCRANGE_2048 ADCRANGE_4096 ADCRANGE_8192 ADCRANGE_16384
 */
+int thistime=millis();
 void setup()
 {
   //Init serial
@@ -57,13 +58,13 @@ int32_t SPO2; //SPO2
 int8_t SPO2Valid; //Flag to display if SPO2 calculation is valid
 int32_t heartRate; //Heart-rate
 int8_t heartRateValid; //Flag to display if heart-rate calculation is valid 
-
-void loop()
-{
+int32_t temperature;
+int thisTime=millis();
+int8_t ok=0;
+void get_spo2_heartrate(){
   Serial.println(F("Wait about four seconds"));
   particleSensor.heartrateAndOxygenSaturation(/**SPO2=*/&SPO2, /**SPO2Valid=*/&SPO2Valid, /**heartRate=*/&heartRate, /**heartRateValid=*/&heartRateValid);
   // Print result 
-  float temperature = particleSensor.readTemperature();
   Serial.print(F("heartRate="));
   Serial.print(heartRate, DEC);
   Serial.print(F(", heartRateValid="));
@@ -72,10 +73,18 @@ void loop()
   Serial.print(SPO2,DEC);
   Serial.print(F(", SPO2Valid="));
   Serial.println(SPO2Valid, DEC);
+}
+void get_temperature(){
+  temperature = particleSensor.readTemperatureC();
+  Serial.println(temperature, DEC);
+}
+
+void loop()
+{
+  get_spo2_heartrate();
   Wire.beginTransmission(8); // transmit to device #8
-  Wire.write("x is ");        // sends five bytes
   Wire.write(SPO2);              // sends one byte
-  Wire.write((int)temperature);
-  Wire.endTransmission();    // stop transmitting
-  delay(500);
+  Wire.write(heartRate);
+  Wire.write(temperature);
+  Wire.endTransmission();
 }
